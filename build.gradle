@@ -55,6 +55,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'com.h2database:h2'
 
     // Payment Integration (Stripe SDK)
     implementation 'com.stripe:stripe-java:24.9.0'
