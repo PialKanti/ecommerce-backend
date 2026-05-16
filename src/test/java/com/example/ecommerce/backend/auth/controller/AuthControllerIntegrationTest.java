@@ -26,6 +26,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Integration tests for {@link AuthController}.
+ *
+ * @author Pial Kanti Samadder
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
