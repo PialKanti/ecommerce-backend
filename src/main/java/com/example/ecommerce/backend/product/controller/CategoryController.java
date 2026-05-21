@@ -99,6 +99,6 @@ public class CategoryController {
             @Parameter(description = "Number of categories to return per page.", example = "10")
             @RequestParam(name = "size", defaultValue = "10") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(ApiResponse.success(PaginatedResponse.of(categoryService.getAll(pageable))));
+        return ResponseEntity.ok(ApiResponse.success(categoryService.getAll(pageable)));
     }
 }

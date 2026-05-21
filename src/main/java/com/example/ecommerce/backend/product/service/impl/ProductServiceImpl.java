@@ -1,5 +1,6 @@
 package com.example.ecommerce.backend.product.service.impl;
 
+import com.example.ecommerce.backend.common.config.CacheConfig;
 import com.example.ecommerce.backend.common.exception.ResourceConflictException;
 import com.example.ecommerce.backend.product.dto.request.ProductCreateRequest;
 import com.example.ecommerce.backend.product.dto.request.ProductUpdateRequest;
@@ -12,6 +13,8 @@ import com.example.ecommerce.backend.product.repository.ProductRepository;
 import com.example.ecommerce.backend.product.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CACHE_PRODUCTS, key = "#id")
     public ProductResponse getById(Long id) {
         return productMapper.toResponse(getProductById(id));
     }
@@ -55,6 +59,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = CacheConfig.CACHE_PRODUCTS, key = "#id")
     public ProductResponse update(Long id, ProductUpdateRequest request) {
         Product product = getProductById(id);
         product.setName(request.name());
@@ -67,6 +72,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = CacheConfig.CACHE_PRODUCTS, key = "#id")
     public void delete(Long id) {
         if (!productRepository.existsById(id)) {
             throw new EntityNotFoundException("Product not found: " + id);

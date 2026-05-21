@@ -1,5 +1,6 @@
 package com.example.ecommerce.backend.product.service;
 
+import com.example.ecommerce.backend.common.dto.response.PaginatedResponse;
 import com.example.ecommerce.backend.product.dto.request.CategoryCreateRequest;
 import com.example.ecommerce.backend.product.dto.request.CategoryUpdateRequest;
 import com.example.ecommerce.backend.product.entity.Category;
@@ -40,7 +41,7 @@ public interface CategoryService {
      * @param pageable pagination parameters
      * @return a page of categories
      */
-    Page<Category> getAll(Pageable pageable);
+    PaginatedResponse<Category> getAll(Pageable pageable);
 
     /**
      * Updates an existing category's name.
