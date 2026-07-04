@@ -1,40 +1,56 @@
 package com.example.ecommerce.backend.auth.service.impl;
 
-import com.example.ecommerce.backend.auth.util.TokenHashUtil;
 import com.example.ecommerce.backend.auth.service.TokenBlacklistService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.example.ecommerce.backend.auth.util.TokenHashUtil;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.Instant;
 
 /**
- * Redis-backed implementation of access token blacklisting.
+ * In-memory implementation of access token blacklisting.
  *
  * @author Pial Kanti Samadder
  */
 @Service
-@RequiredArgsConstructor
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
-    private static final String BLACKLIST_KEY_PREFIX = "auth:blacklist:";
-    private static final String BLACKLIST_VALUE = "revoked";
 
-    private final StringRedisTemplate stringRedisTemplate;
+    private final Cache<String, Instant> blacklist = Caffeine.newBuilder()
+            .expireAfter(new Expiry<String, Instant>() {
+                @Override
+                public long expireAfterCreate(String key, Instant expiresAt, long currentTime) {
+                    return Math.max(0, Duration.between(Instant.now(), expiresAt).toNanos());
+                }
+
+                @Override
+                public long expireAfterUpdate(String key, Instant expiresAt, long currentTime, long currentDuration) {
+                    return expireAfterCreate(key, expiresAt, currentTime);
+                }
+
+                @Override
+                public long expireAfterRead(String key, Instant expiresAt, long currentTime, long currentDuration) {
+                    return currentDuration;
+                }
+            })
+            .build();
 
     @Override
     public void blacklist(String token, Duration ttl) {
         if (ttl.isZero() || ttl.isNegative()) {
             return;
         }
-        stringRedisTemplate.opsForValue().set(buildKey(token), BLACKLIST_VALUE, ttl);
+        blacklist.put(buildKey(token), Instant.now().plus(ttl));
     }
 
     @Override
     public boolean isBlacklisted(String token) {
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(buildKey(token)));
+        return blacklist.getIfPresent(buildKey(token)) != null;
     }
 
     private String buildKey(String token) {
-        return BLACKLIST_KEY_PREFIX + TokenHashUtil.sha256(token);
+        return TokenHashUtil.sha256(token);
     }
 }

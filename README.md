@@ -3,12 +3,11 @@
 ![Java](https://img.shields.io/badge/Java-25-orange?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-6DB33F?logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17.5-4169E1?logo=postgresql&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-7.4-DC382D?logo=redis&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Build-Gradle-02303A?logo=gradle&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Payments-Stripe-635BFF?logo=stripe&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-A production-style **Spring Boot REST API** for an ecommerce platform, built around a modular, domain-driven monolith. It covers the full customer journey — catalog browsing, cart, checkout, inventory reservation, and Stripe payments — plus an RBAC-secured admin surface, JWT authentication, Redis caching, and Flyway-managed PostgreSQL schemas.
+A production-style **Spring Boot REST API** for an ecommerce platform, built around a modular, domain-driven monolith. It covers the full customer journey — catalog browsing, cart, checkout, inventory reservation, and Stripe payments — plus an RBAC-secured admin surface, JWT authentication, in-memory caching, and Flyway-managed PostgreSQL schemas.
 
 This project was built as part of the **Ostad Java Course** to practice production-grade backend patterns: layered service architecture, optimistic locking, transactional checkout, RBAC authorization, and API documentation.
 
@@ -49,11 +48,13 @@ This project was built as part of the **Ostad Java Course** to practice producti
 - Success/failure redirect handlers that transition payment and order state
 - Scheduled job that automatically expires unpaid confirmed orders after a configurable timeout, releasing their reserved inventory
 
+> **Note:** JWT access-token revocation on logout is tracked in an in-memory (per-instance) cache. If this app is ever horizontally scaled to multiple instances, a token revoked on one instance won't be recognized by the others — revisit with a shared store at that point.
+
 **Platform**
 - Consistent `ApiResponse<T>` envelope for every success response and RFC 7807 `ProblemDetail` for every error
-- Redis-backed caching for product/category reads with per-cache TTLs
+- In-memory (Caffeine) caching for product/category reads with per-cache TTLs
 - Centralized, versioned API path (`/api/v1`) and OpenAPI/Swagger documentation
-- Flyway-versioned PostgreSQL schema, fully containerized local dependencies (Postgres + Redis via Docker Compose)
+- Flyway-versioned PostgreSQL schema, containerized local Postgres dependency via Docker Compose
 
 ## Tech Stack
 
@@ -63,7 +64,7 @@ This project was built as part of the **Ostad Java Course** to practice producti
 | Framework | Spring Boot 4.0.6 (Web MVC, Security, Data JPA, Cache, Validation) |
 | Database | PostgreSQL 17.5 |
 | Migrations | Flyway |
-| Caching | Redis 7.4 |
+| Caching | Caffeine (in-memory) |
 | Auth | JWT (`jjwt`), Spring Security, BCrypt |
 | Payments | Stripe Java SDK |
 | Mapping | MapStruct |
@@ -104,7 +105,7 @@ flowchart LR
     end
 
     API --> DB[(PostgreSQL)]
-    API --> Cache[(Redis)]
+    API --> Cache[(Caffeine)]
     Order -->|reserve/release stock| Inv
     Order -->|clear on checkout| Cart
     Order -->|initiate session| Pay
@@ -144,7 +145,7 @@ Admin routes require an authenticated user holding one of `ADMIN`, `PRODUCT_MANA
 
 The Gradle wrapper is included, so a separate Gradle installation is not required.
 
-### 1. Start dependencies (PostgreSQL + Redis)
+### 1. Start dependencies (PostgreSQL)
 
 ```bash
 docker compose up -d
@@ -154,7 +155,6 @@ docker compose ps
 | Service | Container | Host port |
 |---|---|---|
 | PostgreSQL 17.5 | `ecommerce_postgres` | `5432` |
-| Redis 7.4 | `ecommerce_redis` | `6379` |
 
 Default database credentials: `ecommerce_db` / `admin` / `admin@123` (see `compose.yml`).
 
@@ -180,7 +180,7 @@ The app starts on `http://localhost:8080` with the `dev` profile active by defau
 Main configuration files:
 
 - `src/main/resources/application.yaml` — profile-agnostic settings (JWT expiration, payment expiration timing)
-- `src/main/resources/application-dev.yaml` — local datasource, Redis, Stripe, and logging config
+- `src/main/resources/application-dev.yaml` — local datasource, Stripe, and logging config
 
 Flyway migrations live in `src/main/resources/db/migration` and are applied automatically at startup.
 
@@ -207,7 +207,7 @@ jwt:
 .\gradlew.bat test
 ```
 
-Tests run against an in-memory H2 database (`application-test.yml`, profile `test`) with a dedicated Flyway migration set under `src/test/resources/db/test-migration`. **Redis must still be running** (`docker compose up -d`) for the Spring context to load, since cache beans are wired even during tests.
+Tests run against an in-memory H2 database (`application-test.yml`, profile `test`) with a dedicated Flyway migration set under `src/test/resources/db/test-migration`. Caching is in-memory (Caffeine), so no external service is required for the Spring context to load.
 
 Test coverage includes repository-layer tests (`@DataJpaTest`) and full-stack controller integration tests (`@SpringBootTest` + `MockMvc`) covering RBAC, validation, and error-mapping behavior.
 
@@ -229,7 +229,7 @@ A ready-to-import Postman collection is included: [`Ecommerce Backend.postman_co
 
 1. Import the collection into Postman.
 2. Confirm the collection variable `BASE_URL` is set to `http://localhost:8080`.
-3. Start PostgreSQL, Redis, and the application.
+3. Start PostgreSQL and the application.
 4. Run requests from the collection — it includes happy-path CRUD flows, duplicate/validation error scenarios, and category activation/deactivation examples.
 
 ## Troubleshooting

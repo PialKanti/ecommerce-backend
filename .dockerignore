@@ -1,0 +1,22 @@
+# VCS / IDE / editor
+.git
+.gitignore
+.gitattributes
+.idea
+.vscode
+*.iml
+
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Docs (not needed inside the image)
+*.md
+LICENSE
+HELP.md
+
+# Local dev / misc
+compose.yml
+out/
+bin/

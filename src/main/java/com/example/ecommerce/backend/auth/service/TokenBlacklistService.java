@@ -3,7 +3,7 @@ package com.example.ecommerce.backend.auth.service;
 import java.time.Duration;
 
 /**
- * Service interface for Redis-backed access token blacklisting.
+ * Service interface for access token blacklisting.
  *
  * @author Pial Kanti Samadder
  */
