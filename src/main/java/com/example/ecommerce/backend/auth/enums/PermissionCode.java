@@ -1,0 +1,37 @@
+package com.example.ecommerce.backend.auth.enums;
+
+/**
+ * Predefined permission codes used for operation-level authorization.
+ *
+ * <p>Permission codes use the {@code PERMISSION_} prefix and are exposed as
+ * authorities distinct from Spring role authorities that use {@code ROLE_}.</p>
+ *
+ * @author Pial Kanti Samadder
+ */
+public enum PermissionCode {
+    PERMISSION_PRODUCT_READ,
+    PERMISSION_PRODUCT_CREATE,
+    PERMISSION_PRODUCT_UPDATE,
+    PERMISSION_PRODUCT_DELETE,
+    PERMISSION_CATEGORY_READ,
+    PERMISSION_CATEGORY_CREATE,
+    PERMISSION_CATEGORY_UPDATE,
+    PERMISSION_CATEGORY_DELETE,
+    PERMISSION_INVENTORY_READ,
+    PERMISSION_INVENTORY_MANAGE,
+    PERMISSION_ORDER_READ,
+    PERMISSION_ORDER_UPDATE,
+    PERMISSION_ORDER_CANCEL,
+    PERMISSION_USER_READ,
+    PERMISSION_USER_MANAGE,
+    PERMISSION_ROLE_READ,
+    PERMISSION_ROLE_CREATE,
+    PERMISSION_ROLE_UPDATE,
+    PERMISSION_ROLE_DELETE,
+    PERMISSION_ROLE_ASSIGN,
+    PERMISSION_READ,
+    PERMISSION_CREATE,
+    PERMISSION_UPDATE,
+    PERMISSION_DELETE,
+    PERMISSION_ASSIGN
+}

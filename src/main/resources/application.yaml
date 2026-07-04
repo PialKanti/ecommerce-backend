@@ -4,3 +4,17 @@ spring:
 
   profiles:
     active: dev
+
+  mvc:
+    problemdetails:
+      enabled: true
+
+payment:
+  expiration:
+    lifetime: 5m
+    check-delay: 60s
+
+jwt:
+  signing-key: verySecretKeyForJwtSigningExample123456789verySecretKeyForJwtSigningExample123456789
+  expiration: 15m
+  refresh-expiration: 7d

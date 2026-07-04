@@ -1,0 +1,244 @@
+package com.example.ecommerce.backend.auth.controller;
+
+import com.example.ecommerce.backend.auth.dto.request.LoginRequest;
+import com.example.ecommerce.backend.auth.dto.request.RefreshTokenRequest;
+import com.example.ecommerce.backend.auth.dto.request.RegisterRequest;
+import com.example.ecommerce.backend.auth.dto.response.AuthResponse;
+import com.example.ecommerce.backend.auth.dto.response.UserResponse;
+import com.example.ecommerce.backend.auth.service.AuthService;
+import com.example.ecommerce.backend.common.constants.ApiEndpoints;
+import com.example.ecommerce.backend.common.dto.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST controller for user registration and authentication workflows.
+ *
+ * <p>Exposes versioned authentication endpoints under
+ * {@link ApiEndpoints.Auth#BASE_AUTH} and wraps successful responses with the
+ * common {@link ApiResponse} structure used by the API.</p>
+ *
+ * @author Pial Kanti Samadder
+ */
+@RestController
+@RequestMapping(ApiEndpoints.Auth.BASE_AUTH)
+@RequiredArgsConstructor
+@Tag(
+        name = "Authentication",
+        description = "Operations for user registration, login, token refresh, and logout"
+)
+public class AuthController {
+    private final AuthService authService;
+
+    /**
+     * Registers a new user account.
+     *
+     * @param request validated registration payload
+     * @return response containing the registered user
+     */
+    @Operation(
+            summary = "Register user",
+            description = "Creates a new active user account with a BCrypt encrypted password.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "User registration payload containing identity and credential details.",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = RegisterRequest.class),
+                            examples = @ExampleObject(
+                                    name = "Register user",
+                                    value = """
+                                            {
+                                              "firstName": "Pial",
+                                              "lastName": "Samadder",
+                                              "username": "pial",
+                                              "email": "pial@example.com",
+                                              "phoneNumber": "+8801700000000",
+                                              "password": "StrongPass123"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "User registered successfully",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserResponse.class)
+                            )
+                    ),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid registration payload",
+                            content = @Content
+                    ),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "409",
+                            description = "Username or email already exists",
+                            content = @Content
+                    )
+            }
+    )
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully", authService.register(request)));
+    }
+
+    /**
+     * Authenticates a user and returns access and refresh tokens.
+     *
+     * @param request validated login payload
+     * @return response containing authentication tokens
+     */
+    @Operation(
+            summary = "Login user",
+            description = "Authenticates a user by username and password, then issues access and refresh tokens.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "Login payload containing username and password.",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = LoginRequest.class),
+                            examples = @ExampleObject(
+                                    name = "Login user",
+                                    value = """
+                                            {
+                                              "username": "pial",
+                                              "password": "StrongPass123"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "User authenticated successfully",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = AuthResponse.class)
+                            )
+                    ),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "401",
+                            description = "Invalid username or password",
+                            content = @Content
+                    )
+            }
+    )
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Login successful", authService.login(request)));
+    }
+
+    /**
+     * Rotates a refresh token and returns new tokens.
+     *
+     * @param request validated refresh token payload
+     * @return response containing new authentication tokens
+     */
+    @Operation(
+            summary = "Refresh token",
+            description = "Validates a persisted refresh token, revokes it, and returns a newly rotated token pair.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "Refresh payload containing the refresh token.",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = RefreshTokenRequest.class),
+                            examples = @ExampleObject(
+                                    name = "Refresh token",
+                                    value = """
+                                            {
+                                              "refreshToken": "raw-refresh-token"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "Token refreshed successfully",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = AuthResponse.class)
+                            )
+                    ),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "401",
+                            description = "Refresh token is invalid, expired, or revoked",
+                            content = @Content
+                    )
+            }
+    )
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", authService.refresh(request)));
+    }
+
+    /**
+     * Logs out the authenticated user by revoking refresh and access tokens.
+     *
+     * @param authorization authorization header containing the bearer access token
+     * @param request validated refresh token payload
+     * @return response indicating successful logout
+     */
+    @Operation(
+            summary = "Logout user",
+            description = "Revokes the submitted refresh token and blacklists the active access token in Redis.",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "Logout payload containing the refresh token to revoke.",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = RefreshTokenRequest.class),
+                            examples = @ExampleObject(
+                                    name = "Logout user",
+                                    value = """
+                                            {
+                                              "refreshToken": "raw-refresh-token"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "Logout successful",
+                            content = @Content
+                    ),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "401",
+                            description = "Access token or refresh token is invalid",
+                            content = @Content
+                    )
+            }
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @Parameter(description = "Bearer access token.", required = true)
+            @RequestHeader(name = "Authorization") String authorization,
+            @Valid @RequestBody RefreshTokenRequest request) {
+        authService.logout(authorization, request);
+        return ResponseEntity.ok(ApiResponse.<Void>success("Logout successful"));
+    }
+}

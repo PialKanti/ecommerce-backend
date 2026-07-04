@@ -1,52 +1,74 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '4.0.6'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '4.0.6'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
+ext {
+    mapstructVersion = '1.6.3'
+}
+
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(25)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	// Core Spring Boot starters for persistence, database migrations, and web MVC endpoints.
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-flyway'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    // Core Spring Boot starters for persistence, database migrations, and web MVC endpoints.
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-	// PostgreSQL database driver and Flyway database-specific migration support.
-	implementation 'org.flywaydb:flyway-database-postgresql'
-	runtimeOnly 'org.postgresql:postgresql'
+    // PostgreSQL database driver and Flyway database-specific migration support.
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    runtimeOnly 'org.postgresql:postgresql'
 
-	// OpenAPI documentation UI for Spring MVC APIs.
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
+    // OpenAPI documentation UI for Spring MVC APIs.
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
 
-	// Lombok is used only at compile time and by annotation processors.
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+    // JWT support for authentication token creation and validation.
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
-	// Spring Boot test support for persistence, migrations, web MVC, and JUnit Platform execution.
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    // MapStruct generates type-safe mapper implementations at compile time.
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
-	// Lombok support for test sources.
-	testCompileOnly 'org.projectlombok:lombok'
-	testAnnotationProcessor 'org.projectlombok:lombok'
+    // Lombok is used only at compile time and by annotation processors.
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
-	// Runtime launcher used by Gradle to execute JUnit Platform tests.
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Spring Boot test support for persistence, migrations, web MVC, and JUnit Platform execution.
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'com.h2database:h2'
+
+    // Payment Integration (Stripe SDK)
+    implementation 'com.stripe:stripe-java:24.9.0'
+
+    // Lombok support for test sources.
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Runtime launcher used by Gradle to execute JUnit Platform tests.
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
