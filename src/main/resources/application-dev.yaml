@@ -6,11 +6,6 @@ spring:
     password: admin@123
     url: jdbc:postgresql://localhost:5432/ecommerce_db?createDatabaseIfNotExist=true
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
   # JPA related configurations
   jpa:
     show-sql: true

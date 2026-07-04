@@ -1,22 +1,11 @@
 package com.example.ecommerce.backend.common.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import tools.jackson.databind.DefaultTyping;
-import tools.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.cache.RedisCacheManager;
-
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-
-import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 import java.time.Duration;
 
@@ -28,45 +17,20 @@ public class CacheConfig {
     public static final String CACHE_CATEGORIES_LIST = "categories-list";
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-
-        PolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
-                .allowIfSubType("com.example.ecommerce")
-                .allowIfSubType("java.util")
-                .build();
-
-        ObjectMapper mapper = JsonMapper.builder()
-                .activateDefaultTyping(
-                        typeValidator,
-                        DefaultTyping.NON_FINAL_AND_RECORDS,
-                        JsonTypeInfo.As.PROPERTY)
-                .build();
-
-        GenericJacksonJsonRedisSerializer serializer =
-                new GenericJacksonJsonRedisSerializer(mapper);
-
-        RedisCacheConfiguration defaultConfig =
-                RedisCacheConfiguration.defaultCacheConfig()
-                        .serializeValuesWith(
-                                RedisSerializationContext.SerializationPair
-                                        .fromSerializer(serializer)
-                        )
-                        .disableCachingNullValues();
-
-        return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(defaultConfig)
-                .withCacheConfiguration(
-                        CACHE_PRODUCTS,
-                        defaultConfig.entryTtl(Duration.ofMinutes(30))
-                )
-                .withCacheConfiguration(
-                        CACHE_CATEGORIES,
-                        defaultConfig.entryTtl(Duration.ofHours(1))
-                )
-                .withCacheConfiguration(
-                        CACHE_CATEGORIES_LIST,
-                        defaultConfig.entryTtl(Duration.ofMinutes(10))
-                )
-                .build();
+    public CacheManager cacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.registerCustomCache(
+                CACHE_PRODUCTS,
+                Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(30)).build()
+        );
+        cacheManager.registerCustomCache(
+                CACHE_CATEGORIES,
+                Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(1)).build()
+        );
+        cacheManager.registerCustomCache(
+                CACHE_CATEGORIES_LIST,
+                Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(10)).build()
+        );
+        return cacheManager;
     }
 }

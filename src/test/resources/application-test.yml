@@ -21,11 +21,6 @@ spring:
     problemdetails:
       enabled: true
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
 stripe:
   api-key: sk_test_dummy
   success-url: http://localhost:8080/api/v1/payments/success?session_id={CHECKOUT_SESSION_ID}

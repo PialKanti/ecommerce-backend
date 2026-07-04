@@ -21,7 +21,7 @@ RUN chmod +x gradlew
 RUN ./gradlew --no-daemon compileJava compileTestJava
 
 # Copy source and produce the boot jar. Tests are skipped here: they run in
-# CI, not inside the image build, which has no network route to Redis/Postgres.
+# CI, not inside the image build, which has no network route to Postgres.
 COPY src ./src
 RUN ./gradlew --no-daemon bootJar -x test
 

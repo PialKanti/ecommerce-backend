@@ -13,20 +13,9 @@ services:
     networks:
       - backend_net
 
-  redis:
-    container_name: ecommerce_redis
-    image: redis:7.4-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - backend_net
-
 networks:
   backend_net:
     driver: bridge
 
 volumes:
   postgres_data:
-  redis_data:

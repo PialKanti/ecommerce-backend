@@ -202,7 +202,7 @@ public class AuthController {
      */
     @Operation(
             summary = "Logout user",
-            description = "Revokes the submitted refresh token and blacklists the active access token in Redis.",
+            description = "Revokes the submitted refresh token and blacklists the active access token.",
             security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
