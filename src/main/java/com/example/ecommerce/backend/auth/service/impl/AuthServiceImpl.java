@@ -22,6 +22,7 @@ import com.example.ecommerce.backend.auth.service.TokenBlacklistService;
 import com.example.ecommerce.backend.common.exception.ResourceConflictException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,6 +43,7 @@ import java.util.Base64;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
     private static final String TOKEN_TYPE = "Bearer";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -87,6 +89,8 @@ public class AuthServiceImpl implements AuthService {
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         String accessToken = jwtService.generateAccessToken(userDetails);
         String refreshToken = createRefreshToken(user);
+
+        log.info("User logged in: {}", user.getUsername());
         return authResponse(accessToken, refreshToken);
     }
 
